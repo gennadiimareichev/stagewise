@@ -3,6 +3,7 @@ import { useContext, useState, useCallback, useEffect } from 'preact/hooks';
 import { useSRPCBridge } from './use-srpc-bridge';
 import { createPrompt } from '@/prompts';
 import { useAppState } from './use-app-state';
+import type { SelectedElement } from '@stagewise/extension-toolbar-srpc-contract';
 
 interface Message {
   id: string;
@@ -213,6 +214,41 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
     [],
   );
 
+  const mapElementToSelectedElement = useCallback(
+    (element: HTMLElement, depth = 0): SelectedElement => {
+      // Maximum depth to prevent infinite recursion
+      const MAX_DEPTH = 4;
+
+      const result: SelectedElement = {
+        tagName: element.tagName,
+        id: element.id || undefined,
+        classList: Array.from(element.classList),
+        innerText: element.innerText,
+        className: element.className,
+        dataAttributes: Object.fromEntries(Object.entries(element.dataset)),
+        name: (element as HTMLInputElement).name,
+        parent: element.parentElement
+          ? {
+              tagName: element.parentElement.tagName,
+              id: element.parentElement.id || undefined,
+              classList: Array.from(element.parentElement.classList),
+              className: element.parentElement.className,
+            }
+          : undefined,
+      };
+
+      // Add children recursively if we haven't reached max depth
+      if (depth < MAX_DEPTH && element.children.length > 0) {
+        result.children = Array.from(element.children)
+          .filter((child): child is HTMLElement => child instanceof HTMLElement)
+          .map((child) => mapElementToSelectedElement(child, depth + 1));
+      }
+
+      return result;
+    },
+    [],
+  );
+
   const addMessage = useCallback(
     (chatId: ChatId, content: string) => {
       if (!content.trim()) return;
@@ -235,26 +271,13 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
 
       async function triggerAgentPrompt() {
         if (bridge) {
+          console.log('TRIIGGGERING THE AGENT PROMPT');
           const result = await bridge.call.triggerAgentPrompt(
             {
               prompt,
-              selectedElements: chat?.domContextElements.map((element) => ({
-                tagName: element.tagName,
-                id: element.id,
-                classList: Array.from(element.classList),
-                innerText: element.innerText,
-                dataAttributes: Object.fromEntries(
-                  Object.entries(element.dataset),
-                ),
-                name: (element as HTMLInputElement).name,
-                parent: element.parentElement
-                  ? {
-                      tagName: element.parentElement.tagName,
-                      id: element.parentElement.id,
-                      classList: Array.from(element.parentElement.classList),
-                    }
-                  : undefined,
-              })),
+              selectedElements: chat?.domContextElements.map((element) =>
+                mapElementToSelectedElement(element, 3),
+              ),
             },
             {
               onUpdate: (update) => {},
@@ -290,6 +313,7 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
       chats,
       setIsPromptCreationMode,
       internalSetChatAreaState,
+      mapElementToSelectedElement,
     ],
   );
 

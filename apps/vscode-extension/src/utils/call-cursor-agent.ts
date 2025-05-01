@@ -48,6 +48,8 @@ export async function callCursorAgent(
       selectionOrFullDocRange.start,
     );
 
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     await vscode.commands.executeCommand('composer.fixerrormessage');
   } catch (error) {
     vscode.window.showErrorMessage(

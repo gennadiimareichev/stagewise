@@ -12,6 +12,7 @@ export const baseSelectedElementSchema = z.object({
   tagName: z.string(),
   id: z.string().optional(),
   classList: z.array(z.string()),
+  className: z.string().optional(),
   innerText: z.string(),
   dataAttributes: z.record(z.string()),
   name: z.string().optional(),
@@ -20,6 +21,7 @@ export const baseSelectedElementSchema = z.object({
       tagName: z.string(),
       id: z.string().optional(),
       classList: z.array(z.string()).optional(),
+      className: z.string().optional(),
     })
     .optional(),
 });
