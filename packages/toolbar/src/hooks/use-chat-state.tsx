@@ -236,7 +236,26 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
       async function triggerAgentPrompt() {
         if (bridge) {
           const result = await bridge.call.triggerAgentPrompt(
-            { prompt },
+            {
+              prompt,
+              selectedElements: chat?.domContextElements.map((element) => ({
+                tagName: element.tagName,
+                id: element.id,
+                classList: Array.from(element.classList),
+                innerText: element.innerText,
+                dataAttributes: Object.fromEntries(
+                  Object.entries(element.dataset),
+                ),
+                name: (element as HTMLInputElement).name,
+                parent: element.parentElement
+                  ? {
+                      tagName: element.parentElement.tagName,
+                      id: element.parentElement.id,
+                      classList: Array.from(element.parentElement.classList),
+                    }
+                  : undefined,
+              })),
+            },
             {
               onUpdate: (update) => {},
             },

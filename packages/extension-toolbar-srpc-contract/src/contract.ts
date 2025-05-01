@@ -7,11 +7,40 @@ export const DEFAULT_PORT = 5746; // This is the default port for the extension'
 export const PING_ENDPOINT = '/ping/stagewise'; // Will be used by the toolbar to check if the extension is running and find the correct port
 export const PING_RESPONSE = 'stagewise'; // The response to the ping request
 
+// Define the base schema without recursive parts
+export const baseSelectedElementSchema = z.object({
+  tagName: z.string(),
+  id: z.string().optional(),
+  classList: z.array(z.string()),
+  innerText: z.string(),
+  dataAttributes: z.record(z.string()),
+  name: z.string().optional(),
+  parent: z
+    .object({
+      tagName: z.string(),
+      id: z.string().optional(),
+      classList: z.array(z.string()).optional(),
+    })
+    .optional(),
+});
+
+// Define the type with the recursive parts
+export type SelectedElement = z.infer<typeof baseSelectedElementSchema> & {
+  children?: SelectedElement[];
+};
+
+// Create the final schema with proper typing
+export const selectedElementSchema: z.ZodType<SelectedElement> =
+  baseSelectedElementSchema.extend({
+    children: z.lazy(() => z.array(selectedElementSchema).optional()),
+  });
+
 export const contract = createBridgeContract({
   server: {
     triggerAgentPrompt: {
       request: z.object({
         prompt: z.string(),
+        selectedElements: z.array(selectedElementSchema),
       }),
       response: z.object({
         result: z.object({
