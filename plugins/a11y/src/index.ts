@@ -11,10 +11,19 @@ export const A11yPlugin: ToolbarPlugin = {
 
   onLoad: (toolbar) => {
     toolbar.renderToolbarAction(ToolbarAction);
-    toolbar.renderToolbarAction(ToolbarAction);
-    toolbar.renderToolbarAction(ToolbarAction);
-    const handle = toolbar.renderToolbarAction(ToolbarAction);
+  },
 
-    handle.remove();
+  onPromptingStart: () => {
+    return {
+      contextSnippetOffers: [
+        {
+          displayName: 'Console errors',
+          content: 'Check the console for errors',
+          promptContextName: 'console-errors',
+          iconUrl:
+            'https://static-00.iconduck.com/assets.00/alert-circle-icon-512x512-zlbuu4fc.png',
+        },
+      ],
+    };
   },
 };

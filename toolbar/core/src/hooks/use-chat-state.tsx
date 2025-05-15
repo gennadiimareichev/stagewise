@@ -21,7 +21,7 @@ import { useSRPCBridge } from './use-srpc-bridge';
 import { createPrompt, type PluginContextSnippets } from '@/prompts';
 import { useAppState } from './use-app-state';
 import { usePlugins } from './use-plugins';
-import type { ContextElementContext } from '@/plugin';
+import type { ContextElementContext, ContextSnippetOffer } from '@/plugin';
 
 interface Message {
   id: string;
@@ -45,6 +45,7 @@ interface Chat {
       context: ContextElementContext;
     }[];
   }[];
+  contextSnippetOffers: ContextSnippetOffer[];
 }
 
 type ChatAreaState = 'hidden' | 'compact' | 'expanded';
@@ -69,6 +70,7 @@ interface ChatContext {
   chatAreaState: ChatAreaState;
   setChatAreaState: (state: ChatAreaState) => void;
   isPromptCreationActive: boolean;
+  contextSnippetOffers: ContextSnippetOffer[];
   startPromptCreation: () => void;
   stopPromptCreation: () => void;
 }
@@ -86,6 +88,7 @@ const ChatContext = createContext<ChatContext>({
   chatAreaState: 'hidden',
   setChatAreaState: () => {},
   isPromptCreationActive: false,
+  contextSnippetOffers: [],
   startPromptCreation: () => {},
   stopPromptCreation: () => {},
 });
@@ -102,6 +105,7 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
       title: 'New chat',
       inputValue: '',
       domContextElements: [],
+      contextSnippetOffers: [],
     },
   ]);
   const [currentChatId, setCurrentChatId] = useState<ChatId>('new_chat');
@@ -109,6 +113,9 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
     useState<ChatAreaState>('hidden');
   const [isPromptCreationMode, setIsPromptCreationMode] =
     useState<boolean>(false);
+  const [contextSnippetOffers, setContextSnippetOffers] = useState<
+    ContextSnippetOffer[]
+  >([]);
 
   const isMinimized = useAppState((state) => state.minimized);
 
@@ -129,6 +136,7 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
       messages: [],
       inputValue: '',
       domContextElements: [],
+      contextSnippetOffers: [],
     };
     setChats((prev) => [...prev, newChat]);
     setCurrentChatId(newChatId);
@@ -147,6 +155,7 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
               title: 'New chat',
               inputValue: '',
               domContextElements: [],
+              contextSnippetOffers: [],
             },
           ];
         }
@@ -176,19 +185,37 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
 
   const { plugins } = usePlugins();
 
+  const collectContextSnippetOffers = useCallback(
+    (pluginName: string, offers: ContextSnippetOffer[]) => {
+      console.log('COLLECTING OFFERS: ', offers);
+      setContextSnippetOffers((prev) => [...prev, ...offers]);
+    },
+    [],
+  );
+
   const startPromptCreation = useCallback(() => {
     setIsPromptCreationMode(true);
     if (chatAreaState === 'hidden') {
       internalSetChatAreaState('compact');
     }
 
+    // Clear existing context snippet offers before adding new ones
+    setContextSnippetOffers([]);
+
     plugins.forEach((plugin) => {
-      plugin.onPromptingStart?.();
+      const promptingExtension = plugin.onPromptingStart?.();
+      if (promptingExtension?.contextSnippetOffers) {
+        collectContextSnippetOffers(
+          plugin.displayName,
+          promptingExtension.contextSnippetOffers,
+        );
+      }
     });
-  }, [chatAreaState]);
+  }, [chatAreaState, collectContextSnippetOffers, plugins]);
 
   const stopPromptCreation = useCallback(() => {
     setIsPromptCreationMode(false);
+    setContextSnippetOffers([]);
     // clear dom context for this chat so that it doesn't get too weird when re-starting prompt creation mode
     setChats((prev) =>
       prev.map((chat) =>
@@ -202,7 +229,7 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
     plugins.forEach((plugin) => {
       plugin.onPromptingAbort?.();
     });
-  }, [currentChatId, chatAreaState]);
+  }, [currentChatId, chatAreaState, plugins]);
 
   const setChatAreaState = useCallback(
     (state: ChatAreaState) => {
@@ -388,6 +415,7 @@ export const ChatStateProvider = ({ children }: ChatStateProviderProps) => {
     chatAreaState,
     setChatAreaState,
     isPromptCreationActive: isPromptCreationMode,
+    contextSnippetOffers,
     startPromptCreation,
     stopPromptCreation,
     addChatDomContext,

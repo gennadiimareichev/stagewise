@@ -20,7 +20,6 @@
 
 import { Button } from '@headlessui/react';
 import { GripVertical } from 'lucide-react';
-import { ChatArea } from '../chat-area';
 import { ChatBox } from '../chat-box';
 import { MoreActionsButton } from '../more-actions-button';
 import { useDraggable } from '@/hooks/use-draggable';
@@ -29,6 +28,7 @@ import { DraggableContext } from '@/hooks/use-draggable';
 import type { DraggableContextType } from '@/hooks/use-draggable';
 import { usePlugins } from '@/hooks/use-plugins';
 import { ToolbarSection } from '../section';
+import { ContextSnippetsArea } from '../context-snippets-area';
 
 export function ToolbarDraggableBox() {
   const provider = useContext(DraggableContext) as DraggableContextType | null;
@@ -53,7 +53,8 @@ export function ToolbarDraggableBox() {
     >
       {/* This is the complete toolbar area where we can stack different stuff. The main toolbar content stands out. */}
       <div className="pointer-events-auto flex w-min max-w-[80vw] flex-col items-stretch justify-center rounded-3xl border border-border/30 border-solid bg-zinc-50/80 p-0 shadow-lg backdrop-blur-lg transition-colors">
-        <ChatArea />
+        <ContextSnippetsArea />
+        {/* <ChatArea /> */}
         {/* <ToolbarDraggingGrip /> */}
         {/* If the app state is right, we also render the button that enables dragging the toolbar around */}
         <div
