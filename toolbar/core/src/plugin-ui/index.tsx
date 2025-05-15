@@ -16,4 +16,4 @@ export const useToolbar = () => {
   return plugins.toolbarContext;
 };
 
-export { ToolbarButton } from '@/components/toolbar/button';
+export { ToolbarButton } from '@/components/toolbar/toolbar-button';

@@ -22,7 +22,7 @@ import {
   DropdownMenuContent,
 } from '../ui/dropdown-menu';
 import { DropdownMenu } from '../ui/dropdown-menu';
-import { ToolbarButton } from './button';
+import { ToolbarButton } from './toolbar-button';
 import { useAppState } from '@/hooks/use-app-state';
 import { ToolbarSection } from './section';
 import { usePlugins } from '@/hooks/use-plugins';
