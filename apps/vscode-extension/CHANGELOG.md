@@ -1,5 +1,12 @@
 # stagewise-vscode-extension
 
+## 0.5.2
+
+### Patch Changes
+
+- e147977: Give users improved situational recommendations for actions
+- a8d2b4b: Add stagewise integration recommendation for new web projects
+
 ## 0.5.1
 
 ### Minor Changes
